@@ -1,0 +1,50 @@
+This code refers to the publication in Water Journal: Water Balance in the Mediterranean Basin between 1990 
+and 2020
+
+Code Author: Zaibun nisa
+
+
+
+!pip install pymannkendall
+# Import data using datetime and no data value
+import pandas as pd
+file_path = '/content/drive/MyDrive/water/wb_colab.xlsx'
+#data = pd.read_excel(file_path,'NW_Africa')  
+#data = pd.read_excel(file_path,'EU')
+#data = pd.read_excel(file_path,'ME') 
+data = pd.read_excel(file_path,'Turkey')  
+# View first few rows
+data.head()
+#P = data.P.head()
+#P = data.AET.head()
+#P = data.Q.head()
+P = data.DeltaS.head()
+result = mk.original_test(P)
+print(result)
+#############################TIME SERIES GRAPH#########################
+file_path = '/content/drive/MyDrive/water/wb_colab.xlsx'
+#data = pd.read_excel(file_path,'NW_Africa')  
+data = pd.read_excel(file_path,'EU')
+#data = pd.read_excel(file_path,'ME') 
+#data = pd.read_excel(file_path,'Turkey')  
+plt.plot(data.Year,data.P, 'g')
+plt.xlabel('Year')
+plt.ylabel('Precipitation')
+
+#calculate equation for trendline
+z = np.polyfit(data.Year, data.P, 1)
+p = np.poly1d(z)
+
+#add trendline to plot
+plt.ylim(0,900)
+plt.plot(data.Year, p(data.Year), 'b--')
+plt.legend(('P', 'trendline'),
+           loc='lower left')
+#plt.title('Precipitation trend over Turkey and Balkans')
+#plt.title('Precipitation trend over Middle East')
+#plt.title('Precipitation trend over NW Africa')
+plt.title('Precipitation trend over Southern Europe')
+#plt.savefig('/content/drive/MyDrive/water/PoverTurkey.jpeg', dpi=300)
+#plt.savefig('/content/drive/MyDrive/water/PoverME.jpeg', dpi=300)
+#plt.savefig('/content/drive/MyDrive/water/PoverNW.jpeg', dpi=300)
+plt.savefig('/content/drive/MyDrive/water/PoverSE.jpeg', dpi=300)
