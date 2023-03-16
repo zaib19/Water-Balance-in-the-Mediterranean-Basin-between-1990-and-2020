@@ -1,0 +1,145 @@
+
+###############GEE code terraclimate annual sum retrievals################################
+
+var geometry = 
+    /* color: #ff99ff */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-23.30546875000016, 47.58370889033705],
+          [-23.30546875000016, 21.053429409526156],
+          [52.10468749999984, 21.053429409526156],
+          [52.10468749999984, 47.58370889033705]]], null, false);
+          
+var prec = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select('pr').filterBounds(geometry)
+var year = 1991
+var startDate = ee.Date.fromYMD(year, 1, 1)
+var endDate = startDate.advance(1, 'year')
+var filterprec = prec
+  .filter(ee.Filter.date(startDate, endDate))
+var sump = filterprec.reduce(ee.Reducer.sum());
+var palette = ['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494']
+var visParams = {
+  min:0,
+  max: 2000,
+  palette: palette
+}
+print(sump)
+Map.addLayer(sump, visParams, 'sum Precipitation')
+Export.image.toDrive({
+                    image: sump,
+                    description: 'sum_pr_1991',
+                    folder:'./annualsumwaterbudget/pr',
+                    region: geometry,
+                    scale: 1000,
+                    //maxPixels: 1e13,
+                    crs: 'EPSG:4326'
+                });
+                
+var chirps = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select('pet').filterBounds(geometry).sort('system:time_start', false);
+var startDate = ee.Date.fromYMD(year, 1, 1)
+var endDate = startDate.advance(1, 'year')
+var filtered = chirps
+  .filter(ee.Filter.date(startDate, endDate))
+  .map(function(image) {
+    return image.multiply(0.1).set('system:time_start', image.get('system:time_start'));
+});
+var meanpet = filtered.reduce(ee.Reducer.sum());
+var palette = ['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494']
+var visParams = {
+  min:0,
+  max: 2000,
+  palette: palette
+}
+Map.addLayer(meanpet, visParams, 'Mean pet')
+Export.image.toDrive({
+                    image: meanpet,
+                    description: 'sum_pet_1991',
+                    region: geometry,
+                    folder:'./annualsumwaterbudget/pet',
+                    scale: 1000,
+                    //maxPixels: 1e13,
+                    crs: 'EPSG:4326'
+                });
+var chirps = ee.ImageCollection("IDAHO_EPSCOR/TERRACLIMATE").select('aet').filterBounds(geometry)
+var startDate = ee.Date.fromYMD(year, 1, 1)
+var endDate = startDate.advance(1, 'year')
+var filtered = chirps
+  .filter(ee.Filter.date(startDate, endDate)).map(function(image) {
+    return image.multiply(0.1).set('system:time_start', image.get('system:time_start'));
+});
+var meanaet = filtered.reduce(ee.Reducer.sum());
+var palette = ['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494']
+var visParams = {
+  min:0,
+  max: 2000,
+  palette: palette
+}
+Map.addLayer(meanaet, visParams, 'Mean aet')
+Export.image.toDrive({
+                    image: meanaet,
+                    description: 'sum_aet_1991',
+                    folder:'./annualsumwaterbudget/aet',
+                    region: geometry,
+                    scale: 1000,
+                    //maxPixels: 1e13,
+                    crs: 'EPSG:4326'
+                });
+ startDate = ee.Date('1991-01-01'); // set start time for analysis
+var endDate = ee.Date('1991-12-31');
+var nMonths = ee.Number(endDate.difference(startDate,'month')).round();
+  var sst = ee.ImageCollection('IDAHO_EPSCOR/TERRACLIMATE').map(add_ws).select('tet')
+            .filterDate(startDate, endDate);             
+function add_ws(i) {
+  var pr = i.select('pr');
+  var aet = i.select('aet').multiply(0.1);
+  var run = i.select('ro')
+  var tet = pr.subtract(aet).subtract(run).rename('tet');
+  
+  return i.addBands(tet, ['tet']);
+}
+print(sst)
+//var byMonth = ee.ImageCollection(
+  // map over each month
+ // ee.List.sequence(0,nMonths).map(function (n) {
+    // calculate the offset from startDate
+  //  var ini = startDate.advance(n,'month');
+    // advance just one month
+  //  var end = ini.advance(1,'month');
+    // filter and reduce
+   // return sst.filterDate(ini,end)
+                //.select(0).sum()
+                //.set('system:time_start', ini);
+//}));
+
+//print(byMonth);
+
+//Map.addLayer(ee.Image(byMonth.first()),{min: 0, max: 3000},'P-ET-Q');
+//var p_et = ee.ImageCollection(byMonth).select('tet').filterBounds(geometry)
+var startDate = ee.Date.fromYMD(year, 1, 1)
+var endDate = startDate.advance(1, 'year')
+//var filtered = p_et
+var filtered = sst
+  .filter(ee.Filter.date(startDate, endDate))
+var meanp_et = filtered.reduce(ee.Reducer.sum());
+var palette = ['#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494']
+var visParams = {
+  min:0,
+  max: 2000,
+  palette: palette
+}
+print(sst)
+Map.addLayer(meanp_et, visParams, 'Mean p_et')
+Export.image.toDrive({
+                    image: meanp_et,
+                    description: 'sum_p_et_q_1991',
+                    //folder:'./test',
+                    folder:'./annualsumwaterbudget/p_et_q',
+                    region: geometry,
+                    scale: 1000,
+                    //maxPixels: 1e13,
+                    crs: 'EPSG:4326'
+                });
